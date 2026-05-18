@@ -1,13 +1,46 @@
 import { useState } from "react";
+
+import searchSvg from "../assets/search.svg";
+import { formatCurrency } from "../utils/formatCurrenct";
+
 import { Input } from "../components/Input";
+import { Button } from "../components/Button";
+import { Pagination } from "../components/Pagination";
+import { RefundItem, type RefundItemProps } from "../components/RefundItem";
+import { CATEGORIES } from "../utils/categories";
+
+const REFUND_EXAMPLE = {
+  id: "1",
+  name: "Walace",
+  category: "Transporte",
+  amount: formatCurrency(34.5),
+  categoryImg: CATEGORIES["transport"].icon,
+};
 
 export function Dashboard() {
   const [name, setName] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalOfPage, setTotalOfPage] = useState(10);
+  const [refunds, serRefunds] = useState<RefundItemProps[]>([REFUND_EXAMPLE]);
 
   function fetchRefunds(e: React.FormEvent) {
     e.preventDefault();
 
     console.log(name);
+  }
+
+  function handlePagination(action: "next" | "previous") {
+    setPage((prevPage) => {
+      if (action === "next" && prevPage < totalOfPage) {
+        return prevPage + 1;
+      }
+
+      if (action === "previous" && prevPage > 1) {
+        return prevPage - 1;
+      }
+
+      return prevPage;
+    });
   }
 
   return (
@@ -22,7 +55,27 @@ export function Dashboard() {
           placeholder="Pesquisar pelo nome"
           onChange={(e) => setName(e.target.value)}
         />
+
+        <Button type="submit" variant="icon">
+          <img src={searchSvg} alt="Ícone de pesquisar" />
+        </Button>
       </form>
+
+      <div className="my-6 flex flex-col gap-4 max-h-85.5 overflow-y-scroll">
+        {refunds.map((item) => (
+          <RefundItem
+            key={item.id}
+            data={REFUND_EXAMPLE}
+            href={`/refund/${item.id}`}
+          />
+        ))}
+      </div>
+      <Pagination
+        current={page}
+        total={totalOfPage}
+        onNext={() => handlePagination("next")}
+        onPrevious={() => handlePagination("previous")}
+      />
     </div>
   );
 }

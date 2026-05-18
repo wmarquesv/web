@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
+
 import { CATEGORIES, CATEGORIES_KEYS } from "../utils/categories";
+
 import { Input } from "../components/Input";
 import { Select } from "../components/Select";
 import { Upload } from "../components/Upload";
@@ -14,6 +16,7 @@ export function Refund() {
   const [filename, setFilename] = useState<File | null>(null);
 
   const navigate = useNavigate();
+  const params = useParams<{ id: string }>();
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
