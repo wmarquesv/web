@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { z, ZodError } from "zod";
+import axios, { AxiosError } from "axios";
 
+import { api } from "../services/api";
 import fileSvg from "../assets/file.svg";
 import { CATEGORIES, CATEGORIES_KEYS } from "../utils/categories";
 
@@ -9,24 +12,60 @@ import { Select } from "../components/Select";
 import { Upload } from "../components/Upload";
 import { Button } from "../components/Button";
 
+const refundSchema = z.object({
+  name: z
+    .string()
+    .min(3, { message: "Informe um nome claro para sua solicitação" }),
+  category: z.string().min(1, { message: "Informe a categoria" }),
+  amount: z.coerce
+    .number({ message: "Informe um valor valido" })
+    .positive({ message: "Informe um valor valido e superior a 0" }),
+});
+
 export function Refund() {
-  const [name, setName] = useState("1");
-  const [amount, setAmount] = useState("1");
-  const [category, setCategory] = useState("1");
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [filename, setFilename] = useState<File | null>(null);
 
   const navigate = useNavigate();
   const params = useParams<{ id: string }>();
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (params.id) {
       return navigate(-1);
     }
 
-    navigate("/confirm", { state: { fromSubmit: true } });
+    try {
+      setIsLoading(true);
+
+      const data = refundSchema.parse({
+        name,
+        category,
+        amount: amount.replace(",", "."),
+      });
+
+      await api.post("/refunds", {
+        ...data,
+        filename: "123aopiiujhfa;ksjfap;ksjfh;akjsbf.jpeg",
+      });
+
+      navigate("/confirm", { state: { fromSubmit: true } });
+    } catch (error) {
+      console.log(error);
+      if (error instanceof ZodError) {
+        return alert(error.issues[0].message);
+      }
+      if (error instanceof AxiosError) {
+        return alert(error.response?.data.message);
+      }
+      alert("Nao foi possível realizar a solicitação");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
